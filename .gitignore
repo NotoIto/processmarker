@@ -1,0 +1,15 @@
+.idea
+project/target
+project/project/
+node_modules/
+tmp/
+cdk.out/
+*.pyc
+.bsp/
+project/.bloop
+.bloop
+.vscode
+.metals
+null/
+out
+target/
