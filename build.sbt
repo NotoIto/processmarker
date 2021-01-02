@@ -59,24 +59,22 @@ lazy val app = (project in file("modules/app"))
     libraryDependencies ++= domainDependencies,
   )
 
-lazy val scalaJsDomVersion = "1.1.0"
-lazy val scalaJsReactVersion = "1.7.7"
-
-lazy val reactJsVersion = "16.5.2"
 lazy val reactJsDependencies = Seq("org.webjars" % "react" % reactJsVersion / "react-with-addons.js" commonJSName "React")
-
+lazy val scalaJsDependenciesSettings = Seq(
+  libraryDependencies ++= Seq(
+    "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
+    "com.github.japgolly.scalajs-react" %%% "core" % scalaJsReactVersion,
+    "com.github.japgolly.scalajs-react" %%% "extra" % scalaJsReactVersion
+  )
+)
 lazy val ui = (project in file("modules/ui"))
   .enablePlugins(ScalaJSPlugin, JSDependenciesPlugin)
   .dependsOn(domain)
   .settings(commonSettings: _*)
   .settings(assemblySettings: _*)
+  .settings(scalaJsDependenciesSettings: _*)
   .settings(
     libraryDependencies ++= domainDependencies,
-    libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
-      "com.github.japgolly.scalajs-react" %%% "core" % scalaJsReactVersion,
-      "com.github.japgolly.scalajs-react" %%% "extra" % scalaJsReactVersion
-    ),
     jsDependencies ++= reactJsDependencies
   )
 
