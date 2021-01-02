@@ -1,3 +1,5 @@
 package jp.notoito.processmarker.domain.cpuaffinity
 
-case class CPUAffinity(value: Seq[Boolean]) extends AnyVal
+case class CPUAffinity(value: Seq[Boolean]) extends AnyVal {
+  def toLong: Long = ???
+}

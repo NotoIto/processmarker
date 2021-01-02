@@ -1,3 +1,8 @@
 package jp.notoito.processmarker.domain.process
 
-trait ProcessRepository {}
+import jp.notoito.processmarker.domain.DomainDefinedError
+
+trait ProcessRepository {
+  def findBy(executeFileName: String): Either[DomainDefinedError, Process]
+  def findAll: Either[DomainDefinedError, Seq[Process]]
+}
