@@ -3,6 +3,7 @@ name := "processmarker"
 version := "0.1"
 
 import Dependencies._
+import sbtcrossproject.CrossType
 
 lazy val commonSettings = Seq(
   organization := "jp.notoito",
@@ -22,7 +23,7 @@ lazy val commonSettings = Seq(
   test in assembly := {}
 )
 
-val assemblySettings = Seq(
+lazy val assemblySettings = Seq(
   assemblyMergeStrategy in assembly := {
     case PathList("META-INF", "MANIFEST.MF") => MergeStrategy.discard
     case _ => MergeStrategy.first
@@ -35,24 +36,24 @@ val assemblySettings = Seq(
 
 lazy val root = (project in file("."))
   .aggregate(
-    domain,
+    domain.jvm,
     app,
     ui,
-    infrastructure
+    infrastructure.jvm
   )
   .settings(commonSettings: _*)
   .settings(
     publishArtifact := false
   )
 
-lazy val domain = (project in file("modules/domain"))
+lazy val domain = (crossProject(JSPlatform, JVMPlatform) crossType CrossType.Pure in file("modules/domain"))
   .settings(commonSettings: _*)
   .settings(
     libraryDependencies ++= domainDependencies
   )
 
 lazy val app = (project in file("modules/app"))
-  .dependsOn(domain, infrastructure)
+  .dependsOn(domain.jvm, infrastructure.jvm)
   .settings(commonSettings: _*)
   .settings(assemblySettings: _*)
   .settings(
@@ -69,16 +70,17 @@ lazy val scalaJsDependenciesSettings = Seq(
 )
 lazy val ui = (project in file("modules/ui"))
   .enablePlugins(ScalaJSPlugin, JSDependenciesPlugin)
-  .dependsOn(domain)
+  .dependsOn(domain.js)
   .settings(commonSettings: _*)
   .settings(assemblySettings: _*)
   .settings(scalaJsDependenciesSettings: _*)
   .settings(
     libraryDependencies ++= domainDependencies,
+    scalaJSUseMainModuleInitializer := true,
     jsDependencies ++= reactJsDependencies
   )
 
-lazy val infrastructure = (project in file("modules/infrastructure"))
+lazy val infrastructure = (crossProject(JSPlatform, JVMPlatform) crossType CrossType.Full in file("modules/infrastructure"))
   .dependsOn(domain)
   .settings(commonSettings: _*)
   .settings(assemblySettings: _*)

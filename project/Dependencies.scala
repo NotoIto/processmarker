@@ -1,4 +1,5 @@
 import sbt._
+
 object Dependencies {
   private lazy val scalaTestVersion = "3.2.3"
   private lazy val testDependencies = Seq(
