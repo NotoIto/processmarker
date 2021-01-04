@@ -15,10 +15,12 @@ object Dependencies {
     "io.circe" %% "circe-parser"  % circeVersion
   )
 
-  lazy val scalaJsDomVersion = "1.1.0"
-  lazy val scalaJsReactVersion = "1.7.7"
-
-  lazy val reactJsVersion = "16.5.2"
+  lazy val reactJsVersion = "17.0.1"
+  lazy val reactJsNpmDependencies = Seq(
+    "react" -> reactJsVersion,
+    "react-dom" -> reactJsVersion
+  )
+  lazy val slinkyVersion = "0.6.6"
 
   lazy val domainDependencies = circeDependencies ++ testDependencies
   lazy val appDependencies = testDependencies

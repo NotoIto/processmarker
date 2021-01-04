@@ -7,7 +7,6 @@ import sbtcrossproject.CrossType
 
 lazy val commonSettings = Seq(
   organization := "jp.notoito",
-  idePackagePrefix := Some("jp.notoito.processmarker"),
   scalaVersion := "2.13.4",
   scalacOptions := Seq(
     "Xfatal-warnings",
@@ -37,54 +36,92 @@ lazy val assemblySettings = Seq(
 lazy val root = (project in file("."))
   .aggregate(
     domain.jvm,
-    app,
-    ui,
+    appDaemon,
     infrastructure.jvm
   )
   .settings(commonSettings: _*)
   .settings(
     publishArtifact := false
   )
-
-lazy val domain = (crossProject(JSPlatform, JVMPlatform) crossType CrossType.Pure in file("modules/domain"))
-  .settings(commonSettings: _*)
   .settings(
+    commands += Command.command("compileUiFast") { state =>
+      "uiJS / fastOptJS" ::
+      "uiJS / copyReactSrc" ::
+      state
+    },
+    commands += Command.command("compileUiFull") { state =>
+      "uiJS / fullOptJS" ::
+      "uiJS / copyReactSrc" ::
+      state
+    }
+  )
+
+lazy val domain = (crossProject(JSPlatform, JVMPlatform) crossType CrossType.Full in file("modules/domain"))
+  .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
+  .jvmSettings(commonSettings: _*)
+  .jsSettings(commonSettings: _*)
+  .jvmSettings(
     libraryDependencies ++= domainDependencies
   )
 
-lazy val app = (project in file("modules/app"))
+lazy val appDaemon = (project in file("modules/app/daemon"))
   .dependsOn(domain.jvm, infrastructure.jvm)
   .settings(commonSettings: _*)
   .settings(assemblySettings: _*)
   .settings(
     libraryDependencies ++= domainDependencies,
   )
+lazy val appConfigurator = (crossProject(JSPlatform) crossType CrossType.Pure in file("modules/app/configurator"))
+  .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
+  .dependsOn(domain, infrastructure)
+  .settings(commonSettings: _*)
+  .jsSettings(
+    npmDependencies in Compile ++= reactJsNpmDependencies,
+  )
 
-lazy val reactJsDependencies = Seq("org.webjars" % "react" % reactJsVersion / "react-with-addons.js" commonJSName "React")
-lazy val scalaJsDependenciesSettings = Seq(
+lazy val slinkyJsDependenciesSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.scala-js" %%% "scalajs-dom" % scalaJsDomVersion,
-    "com.github.japgolly.scalajs-react" %%% "core" % scalaJsReactVersion,
-    "com.github.japgolly.scalajs-react" %%% "extra" % scalaJsReactVersion
+    "me.shadaj" %%% "slinky-core" % slinkyVersion,
+    "me.shadaj" %%% "slinky-web" % slinkyVersion,
+    "me.shadaj" %%% "slinky-native" % slinkyVersion,
+    "me.shadaj" %%% "slinky-hot" % slinkyVersion,
+    "me.shadaj" %%% "slinky-scalajsreact-interop" % slinkyVersion
   )
 )
-lazy val ui = (project in file("modules/ui"))
-  .enablePlugins(ScalaJSPlugin, JSDependenciesPlugin)
-  .dependsOn(domain.js)
+lazy val copyReactSrc = taskKey[Unit]("Copy react source file.")
+lazy val ui = (crossProject(JSPlatform) crossType CrossType.Pure in file("modules/ui"))
+  .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
+  .dependsOn(domain, appConfigurator)
   .settings(commonSettings: _*)
-  .settings(assemblySettings: _*)
-  .settings(scalaJsDependenciesSettings: _*)
+  .jsSettings(slinkyJsDependenciesSettings: _*)
+  .jsSettings(
+    npmDependencies in Compile ++= reactJsNpmDependencies,
+    scalacOptions ++= Seq(
+      "-P:scalajs:sjsDefinedByDefault",
+      "-Ymacro-annotations"
+    )
+  )
   .settings(
-    libraryDependencies ++= domainDependencies,
-    scalaJSUseMainModuleInitializer := true,
-    jsDependencies ++= reactJsDependencies
+    crossTarget in (Compile, fullOptJS) := target.value / "html",
+    crossTarget in (Compile, fastOptJS) := target.value / "html",
+    target in (Compile, fullOptJS) := target.value / "html",
+    target in (Compile, fastOptJS) := target.value / "html",
+    copyReactSrc := {
+        val from =  baseDirectory.value / ".." / "src" / "react"
+        val to = target.value / "html"
+        to.mkdirs()
+        IO.copyDirectory(from, to)
+        println(s"Copied from $from to $to")
+      }
   )
 
 lazy val infrastructure = (crossProject(JSPlatform, JVMPlatform) crossType CrossType.Full in file("modules/infrastructure"))
+  .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin)
   .dependsOn(domain)
-  .settings(commonSettings: _*)
-  .settings(assemblySettings: _*)
-  .settings(
+  .jvmSettings(commonSettings: _*)
+  .jsSettings(commonSettings: _*)
+  .jvmSettings(assemblySettings: _*)
+  .jvmSettings(
     libraryDependencies ++= domainDependencies,
     parallelExecution in Test := false
   )

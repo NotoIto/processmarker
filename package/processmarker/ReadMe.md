@@ -76,7 +76,7 @@ The following are more advanced settings:
  * OS_VERSION - The version of OS, like 6.1 something something for Windows. (0.9.9+)
  * OS_NAME - The reported name of the OS. (0.9.9+)
  * USER_NAME = The user name (0.10.6+)
- * USER_DOMAIN = The user domain name (could also be local computer name) (0.10.6+)
+ * USER_DOMAIN = The user jp.notoito.processmarker.domain name (could also be local computer name) (0.10.6+)
  * IS_PROCESSELEVATED = Is the process elevated? (0.9.9+)
  * IS_SYSTEM = Is the user the system account? (0.10.6+)
  * IS_REMOTEDESKTOP = Is the user in a terminal services session? (0.10.6+)
