@@ -97,7 +97,6 @@ lazy val ui = (crossProject(JSPlatform) crossType CrossType.Pure in file("module
   .jsSettings(
     npmDependencies in Compile ++= reactJsNpmDependencies,
     scalacOptions ++= Seq(
-      "-P:scalajs:sjsDefinedByDefault",
       "-Ymacro-annotations"
     )
   )
